@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Die Familienshow von Shandy und Dante</title>
+<style>
+    body { background:#0d0d0d; color:#fff; font-family:Arial; margin:20px; }
+    h2, h3, h4 { color:#E6007E; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    th { background:#00C8C8; color:#000; padding:10px; }
+    td { border:1px solid #00C8C8; padding:8px; text-align:center; }
+    .punkte { color:#FFD500; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<h2>Die Familienshow von Shandy und Dante</h2>
+<p>Daten werden geladen…</p>
+
+<div id="output"></div>
+
+<script>
+async function loadData() {
+    try {
+        const res = await fetch("turnier.json?cache=" + Date.now());
+        const data = await res.json();
+        render(data);
+    } catch {
+        document.getElementById("output").innerHTML =
+            "<p style='color:#FFD500'>Fehler beim Laden der Daten.</p>";
+    }
+}
+
+function render(data) {
+    let html = "<h3>Gesamttabelle</h3>";
+
+    let stats = {};
+    data.teams.forEach(t => stats[t] = { punkte: 0, schnitt: 0, beste: 99, schlechteste: 0 });
+
+    data.spieltage.forEach(tag => {
+        tag.ergebnis.forEach(e => {
+            let punkte = 7 - e.platz; // 1. Platz = 6 Punkte
+            stats[e.team].punkte += punkte;
+            stats[e.team].schnitt += e.platz;
+            if (e.platz < stats[e.team].beste) stats[e.team].beste = e.platz;
+            if (e.platz > stats[e.team].schlechteste) stats[e.team].schlechteste = e.platz;
+        });
+    });
+
+    data.teams.forEach(t => {
+        stats[t].schnitt = (stats[t].schnitt / data.spieltage.length).toFixed(2);
+    });
+
+    html += "<table><tr><th>Team</th><th>Punkte</th><th>Schnitt</th><th>Beste</th><th>Schlechteste</th></tr>";
+    data.teams.forEach(t => {
+        html += `<tr>
+            <td>${t}</td>
+            <td class="punkte">${stats[t].punkte}</td>
+            <td>${stats[t].schnitt}</td>
+            <td>${stats[t].beste}</td>
+            <td>${stats[t].schlechteste}</td>
+        </tr>`;
+    });
+    html += "</table>";
+
+    html += "<h3>Spieltage</h3>";
+    data.spieltage.forEach(tag => {
+        html += `<h4 style="color:#FFD500">${tag.datum}</h4>
+        <table><tr><th>Team</th><th>Platz</th></tr>`;
+        tag.ergebnis.forEach(e=>{
+            html += `<tr><td>${e.team}</td><td>${e.platz}</td></tr>`;
+        });
+        html += "</table>";
+    });
+
+    document.getElementById("output").innerHTML = html;
+}
+
+loadData();
+</script>
+
+</body>
+</html>

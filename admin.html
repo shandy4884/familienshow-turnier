@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Turnier Admin – Die Familienshow</title>
+<style>
+    body { background:#0d0d0d; color:#fff; font-family:Arial; margin:20px; }
+    h2, h3 { color:#E6007E; }
+    input, select, button {
+        padding:8px; margin:5px 0; background:#1a1a1a;
+        border:1px solid #00C8C8; color:#fff;
+    }
+    button { background:#E6007E; border:none; cursor:pointer; }
+    button:hover { background:#00C8C8; color:#000; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    th, td { border:1px solid #00C8C8; padding:8px; text-align:center; }
+</style>
+</head>
+<body>
+
+<h2>Turnier Admin – Die Familienshow</h2>
+
+<h3>Teamnamen</h3>
+<div id="teams"></div>
+
+<h3>Spieltag eintragen</h3>
+<label>Datum (TT.MM.JJJJ):</label>
+<input id="datum" placeholder="z.B. 12.02.2026">
+
+<div id="spieltagForm"></div>
+
+<button onclick="addSpieltag()">Spieltag speichern</button>
+
+<h3>Alle Spieltage</h3>
+<div id="alleSpieltage"></div>
+
+<button onclick="exportJSON()">turnier.json erzeugen</button>
+
+<script>
+let teams = ["Team 1","Team 2","Team 3","Team 4","Team 5","Team 6"];
+let spieltage = [];
+
+function renderTeams() {
+    let html = "";
+    teams.forEach((t,i)=>{
+        html += `<input value="${t}" onchange="teams[${i}] = this.value"> <br>`;
+    });
+    document.getElementById("teams").innerHTML = html;
+}
+
+function renderSpieltagForm() {
+    let html = "";
+    for (let i=0;i<teams.length;i++) {
+        html += `
+            <label>${teams[i]} Platzierung:</label>
+            <select id="p${i}">
+                <option value="">–</option>
+                <option>1</option><option>2</option><option>3</option>
+                <option>4</option><option>5</option><option>6</option>
+            </select><br>
+        `;
+    }
+    document.getElementById("spieltagForm").innerHTML = html;
+}
+
+function addSpieltag() {
+    let datum = document.getElementById("datum").value;
+    if (!datum) return alert("Bitte Datum eintragen (TT.MM.JJJJ).");
+
+    let ergebnis = [];
+    for (let i=0;i<teams.length;i++) {
+        let p = document.getElementById("p"+i).value;
+        if (!p) return alert("Bitte alle Platzierungen eintragen.");
+        ergebnis.push({ team: teams[i], platz: Number(p) });
+    }
+
+    spieltage.push({ datum, ergebnis });
+    renderAlleSpieltage();
+}
+
+function renderAlleSpieltage() {
+    let html = "";
+    spieltage.forEach((tag,i)=>{
+        html += `<h4 style="color:#FFD500">Spieltag ${tag.datum}</h4>
+        <table><tr><th>Team</th><th>Platz</th></tr>`;
+        tag.ergebnis.forEach(e=>{
+            html += `<tr><td>${e.team}</td><td>${e.platz}</td></tr>`;
+        });
+        html += "</table>";
+    });
+    document.getElementById("alleSpieltage").innerHTML = html;
+}
+
+function exportJSON() {
+    const data = { teams, spieltage };
+    const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "turnier.json";
+    a.click();
+}
+
+renderTeams();
+renderSpieltagForm();
+</script>
+
+</body>
+</html>
